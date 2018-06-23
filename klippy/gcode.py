@@ -599,13 +599,13 @@ class GCodeParser:
             return
         kin = self.toolhead.get_kinematics()
         steppers = kin.get_steppers()
-        mcu_pos = " ".join(["%s:%d" % (s.name, s.mcu_stepper.get_mcu_position())
+        mcu_pos = " ".join(["%s:%d" % (s.get_name(), s.get_mcu_position())
                             for s in steppers])
         stepper_pos = " ".join(
-            ["%s:%.6f" % (s.name, s.mcu_stepper.get_commanded_position())
+            ["%s:%.6f" % (s.get_name(), s.get_commanded_position())
              for s in steppers])
         kinematic_pos = " ".join(["%s:%.6f"  % (a, v)
-                                  for a, v in zip("XYZE", kin.get_position())])
+                                  for a, v in zip("XYZE", kin.calc_position())])
         toolhead_pos = " ".join(["%s:%.6f" % (a, v) for a, v in zip(
             "XYZE", self.toolhead.get_position())])
         gcode_pos = " ".join(["%s:%.6f"  % (a, v)

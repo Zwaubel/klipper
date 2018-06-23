@@ -44,9 +44,9 @@ class PrinterProbe:
             'QUERY_PROBE', self.cmd_QUERY_PROBE, desc=self.cmd_QUERY_PROBE_help)
     def build_config(self):
         toolhead = self.printer.lookup_object('toolhead')
-        z_steppers = toolhead.get_kinematics().get_steppers("Z")
-        for s in z_steppers:
-            for mcu_endstop, name in s.get_endstops():
+        z_rails = toolhead.get_kinematics().get_rails("Z")
+        for rail in z_rails:
+            for mcu_endstop, name in rail.get_endstops():
                 for mcu_stepper in mcu_endstop.get_steppers():
                     self.mcu_probe.add_stepper(mcu_stepper)
     def setup_pin(self, pin_params):
@@ -76,10 +76,9 @@ class PrinterProbe:
             if "Timeout during endstop homing" in reason:
                 reason += HINT_TIMEOUT
             raise self.gcode.error(reason)
-        kin = toolhead.get_kinematics()
-        pos = kin.get_position()
-        self.gcode.respond_info(
-            "probe z: %.3f" % (pos[2]))
+        pos = toolhead.get_position()
+        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f" % (
+            pos[0], pos[1], pos[2]))
         self.gcode.reset_last_position()
     cmd_QUERY_PROBE_help = "Return the status of the z-probe"
     def cmd_QUERY_PROBE(self, params):
@@ -208,7 +207,7 @@ class ProbePointsHelper:
     def cmd_NEXT(self, params):
         # Record current position
         self.toolhead.wait_moves()
-        self.results.append(self.callback.get_position())
+        self.results.append(self.callback.get_probed_position())
         # Lift toolhead
         curpos = self.toolhead.get_position()
         curpos[2] = self.horizontal_move_z
