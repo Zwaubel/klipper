@@ -29,20 +29,16 @@ class UC1701:
         self.pins = [pin_params['pin'] for pin_params in pins]
         self.mcu = mcu
         self.spi_oid = self.mcu.create_oid()
-        self.cs_oid = self.mcu.create_oid()
         self.a0_oid = self.mcu.create_oid()
         self.mcu.add_config_object(self)
         self.glyph_buffer = []
         self.spi_xfer_cmd = self.set_pin_cmd = None
-        self.vram = ([bytearray(128) for i in range(8)], 
+        self.vram = ([bytearray(128) for i in range(8)],
                     [bytearray('~'*128) for i in range(8)])
     def build_config(self):
         self.mcu.add_config_cmd(
-            "config_spi_without_cs oid=%d bus=%d mode=%d rate=%d shutdown_msg=" % (
-                self.spi_oid, 0, 0, 4000000))
-        self.mcu.add_config_cmd(
-            "config_digital_out oid=%d pin=%s value=%d default_value=%d max_duration=%d" % (
-                self.cs_oid, self.pins[0], 1, 1, 0))
+            "config_spi oid=%d bus=%d pin=%s mode=%d rate=%d shutdown_msg=" % (
+                self.spi_oid, 0, self.pins[0], 0, 10000000))
         self.mcu.add_config_cmd(
             "config_digital_out oid=%d pin=%s value=%d default_value=%d max_duration=%d" % (
                 self.a0_oid, self.pins[1], 0, 0, 0))
@@ -52,13 +48,11 @@ class UC1701:
         self.update_pin_cmd = self.mcu.lookup_command(
            "update_digital_out oid=%c value=%c", cq=cmd_queue)
     def send(self, cmds, is_data=False):
-        self.update_pin_cmd.send([self.cs_oid, 0], reqclock=BACKGROUND_PRIORITY_CLOCK)
         if is_data:
             self.update_pin_cmd.send([self.a0_oid, 1], reqclock=BACKGROUND_PRIORITY_CLOCK)
         else:
             self.update_pin_cmd.send([self.a0_oid, 0], reqclock=BACKGROUND_PRIORITY_CLOCK)
         self.spi_send_cmd.send([self.spi_oid, cmds], reqclock=BACKGROUND_PRIORITY_CLOCK)
-        self.update_pin_cmd.send([self.cs_oid, 1], reqclock=BACKGROUND_PRIORITY_CLOCK)
     def init(self):
         init_cmds = [0xE2, # System reset
                      0x40, # Set display to start at line 0
@@ -74,7 +68,7 @@ class UC1701:
                      0x81, # Set Electronic Volume
                      0x28, # Electronic volume value (40)
                      0xAC, # Set static indicator off
-                     0x00, # NOP 
+                     0x00, # NOP
                      0xA6, # Disable Inverse
                      0xAF] # Set display enable
         self.send(init_cmds)
@@ -128,7 +122,7 @@ class UC1701:
         self.glyph_buffer.append((glyph_id, data))
         self.glyph_buffer.sort(key=lambda x: x[0])
     def write_glyph(self, x, y, glyph_id):
-        pix_x = x*8   
+        pix_x = x*8
         pix_y = y*16
         data = self.glyph_buffer[glyph_id][1]
         for bits in data:

@@ -144,7 +144,7 @@ class PrinterLCD:
             lcd_chip.write_text(0, 3, self.message)
             if self.msg_time:
                 # Screen updates every .5 seconds
-                self.msg_time -= .5 
+                self.msg_time -= .5
                 if self.msg_time <= 0.:
                     self.message = None
                     self.msg_time = None
@@ -174,8 +174,7 @@ class PrinterLCD:
             info = self.fan.get_status(eventtime)
             self.animate_glyphs(eventtime, 10, 0, self.FAN1_GLYPH,
                                 info['speed'] != 0.)
-            align = '>'if self.lcd_type == 'uc1701' else '^'
-            self.draw_percent(12, 0, 4, info['speed'], align)
+            self.draw_percent(12, 0, 4, info['speed'], '>')
         # SD card print progress
         progress = None
         toolhead_info = self.toolhead.get_status(eventtime)
@@ -194,14 +193,13 @@ class PrinterLCD:
                 x, y, width = 0, 2, 10
             else:
                 x, y, width = 10, 1, 6
-            self.draw_percent(x, y, width, progress)
+            self.draw_percent(x, y, width, progress, '^')
             self.draw_progress_bar(x, y, width, progress)
         # G-Code speed factor
         gcode_info = self.gcode.get_status(eventtime)
         if extruder_count == 1:
             self.draw_icon(10, 1, icons.feedrate_icon)
-            align = '>'if self.lcd_type == 'uc1701' else '^'
-            self.draw_percent(12, 1, 4, gcode_info['speed_factor'], align)
+            self.draw_percent(12, 1, 4, gcode_info['speed_factor'], '>')
         # Printing time and status
         printing_time = toolhead_info['printing_time']
         remaining_time = None
@@ -219,7 +217,7 @@ class PrinterLCD:
             self.lcd_chip.write_text(0, 3, self.message)
             if self.msg_time:
                 # Screen updates every .5 seconds
-                self.msg_time -= .5 
+                self.msg_time -= .5
                 if self.msg_time <= 0.:
                     self.message = None
                     self.msg_time = None
