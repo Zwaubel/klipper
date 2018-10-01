@@ -3,7 +3,9 @@
 # Copyright (C) 2018  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging
+import traceback, logging
+
+DEFAULT_PREFIX = 'default_parameter_'
 
 class GCodeMacro:
     def __init__(self, config):
@@ -17,16 +19,21 @@ class GCodeMacro:
         except self.gcode.error as e:
             raise config.error(str(e))
         self.in_script = False
+        self.kwparams = { o[len(DEFAULT_PREFIX):].upper(): config.get(o)
+                          for o in config.get_prefix_options(DEFAULT_PREFIX) }
     cmd_desc = "G-Code macro"
     def cmd(self, params):
         if self.in_script:
             raise self.gcode.error(
                 "Macro %s called recursively" % (self.alias,))
         script = ""
+        kwparams = dict(self.kwparams)
+        kwparams.update(params)
         try:
-            script = self.script.format(**params)
-        except Exception:
-            msg = "Macro %s script formatting failed" % (self.alias,)
+            script = self.script.format(**kwparams)
+        except Exception as e:
+            msg = "Error evaluating %s: %s" % (
+                self.alias, traceback.format_exception_only(type(e), e)[-1])
             logging.exception(msg)
             raise self.gcode.error(msg)
         self.in_script = True
