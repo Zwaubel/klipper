@@ -398,10 +398,20 @@ usb_req_set_configuration(struct usb_ctrlrequest *req)
     }
     usb_set_configure();
     usb_notify_bulk_in();
+    usb_notify_bulk_out();
     usb_do_xfer(NULL, 0, UX_SEND);
 }
 
 static struct usb_cdc_line_coding line_coding;
+static uint8_t line_control_state;
+
+static void
+check_reboot(void)
+{
+    if (line_coding.dwDTERate == 1200 && !(line_control_state & 0x01))
+        // A baud of 1200 is an Arduino style request to enter the bootloader
+        usb_request_bootloader();
+}
 
 static void
 usb_req_set_line_coding(struct usb_ctrlrequest *req)
@@ -412,6 +422,7 @@ usb_req_set_line_coding(struct usb_ctrlrequest *req)
         return;
     }
     usb_do_xfer(&line_coding, sizeof(line_coding), UX_READ);
+    check_reboot();
 }
 
 static void
@@ -432,7 +443,9 @@ usb_req_set_line(struct usb_ctrlrequest *req)
         usb_do_stall();
         return;
     }
+    line_control_state = req->wValue;
     usb_do_xfer(NULL, 0, UX_SEND);
+    check_reboot();
 }
 
 static void
