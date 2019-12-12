@@ -9,7 +9,6 @@ Klipper supports the following standard G-Code commands:
 - Move to origin: `G28 [X] [Y] [Z]`
 - Turn off motors: `M18` or `M84`
 - Wait for current moves to finish: `M400`
-- Select tool: `T<index>`
 - Use absolute/relative distances for extrusion: `M82`, `M83`
 - Use absolute/relative coordinates: `G90`, `G91`
 - Set position: `G92 [X<pos>] [Y<pos>] [Z<pos>] [E<pos>]`
@@ -43,8 +42,8 @@ possible G-Code command. Instead, Klipper prefers human readable
 If one requires a less common G-Code command then it may be possible
 to implement it with a custom Klipper gcode_macro (see
 [example-extras.cfg](https://github.com/KevinOConnor/klipper/tree/master/config/example-extras.cfg)
-for details). For example, one might use this to implement: `G10`,
-`G11`, `G12`, `G29`, `G30`, `G31`, `M42`, `M80`, `M81`, etc.
+for details). For example, one might use this to implement: `G12`,
+`G29`, `G30`, `G31`, `M42`, `M80`, `M81`, `T1`, etc.
 
 ## G-Code SD card commands
 
@@ -58,6 +57,20 @@ Klipper also supports the following standard G-Code commands if the
 - Set SD position: `M26 S<offset>`
 - Report SD print status: `M27`
 
+## G-Code arcs
+
+The following standard G-Code commands are available if a "gcode_arcs"
+config section is enabled:
+- Controlled Arc Move (G2 or G3): `G2 [X<pos>] [Y<pos>] [Z<pos>]
+  [E<pos>] [F<speed>] I<value> J<value>`
+
+## G-Code firmware retraction
+
+The following standard G-Code commands are available if a
+"firmware_retraction" config section is enabled:
+- Retract: `G10`
+- Unretract: `G11`
+
 ## G-Code display commands
 
 The following standard G-Code commands are available if a "display"
@@ -69,8 +82,6 @@ config section is enabled:
 
 The following standard G-Code commands are currently available, but
 using them is not recommended:
-- Offset axes: `M206 [X<offset>] [Y<offset>] [Z<offset>]` (Use
-  SET_GCODE_OFFSET instead.)
 - Get Endstop Status: `M119` (Use QUERY_ENDSTOPS instead.)
 
 # Extended G-Code Commands
@@ -87,6 +98,11 @@ The following standard commands are supported:
 - `QUERY_ENDSTOPS`: Probe the axis endstops and report if they are
   "triggered" or in an "open" state. This command is typically used to
   verify that an endstop is working correctly.
+- `QUERY_ADC [NAME=<config_name>] [PULLUP=<value>]`: Report the last
+  analog value received for a configured analog pin. If NAME is not
+  provided, the list of available adc names are reported. If PULLUP is
+  provided (as a value in Ohms), the raw analog value along with the
+  equivalent resistance given that pullup is reported.
 - `GET_POSITION`: Return information on the current location of the
   toolhead.
 - `SET_GCODE_OFFSET [X=<pos>|X_ADJUST=<adjust>]
@@ -136,10 +152,13 @@ The following standard commands are supported:
 - `SET_HEATER_TEMPERATURE HEATER=<heater_name> [TARGET=<target_temperature>]`:
   Sets the target temperature for a heater. If a target temperature is
   not supplied, the target is 0.
+- `ACTIVATE_EXTRUDER EXTRUDER=<config_name>`: In a printer with
+  multiple extruders this command is used to change the active
+  extruder.
 - `SET_PRESSURE_ADVANCE [EXTRUDER=<config_name>] [ADVANCE=<pressure_advance>]
-  [ADVANCE_LOOKAHEAD_TIME=<pressure_advance_lookahead_time>]`:
-  Set pressure advance parameters. If EXTRUDER is not specified, it
-  defaults to the active extruder.
+  [SMOOTH_TIME=<pressure_advance_smooth_time>]`: Set pressure advance
+  parameters. If EXTRUDER is not specified, it defaults to the active
+  extruder.
 - `STEPPER_BUZZ STEPPER=<config_name>`: Move the given stepper forward
   one mm and then backward one mm, repeated 10 times. This is a
   diagnostic tool to help verify stepper connectivity.
