@@ -4,7 +4,8 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging, os
-import pins, mcu, bus
+import pins, mcu
+from . import bus
 
 REPLICAPE_MAX_CURRENT = 3.84
 REPLICAPE_PCA9685_BUS = 2
@@ -73,7 +74,7 @@ class pca9685_pwm:
         cmd_queue = self._mcu.alloc_command_queue()
         self._set_cmd = self._mcu.lookup_command(
             "schedule_pca9685_out oid=%c clock=%u value=%hu", cq=cmd_queue)
-    def set_pwm(self, print_time, value):
+    def set_pwm(self, print_time, value, cycle_time=None):
         clock = self._mcu.print_time_to_clock(print_time)
         if self._invert:
             value = 1. - value
